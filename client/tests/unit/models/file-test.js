@@ -3,7 +3,7 @@ import {
   test
 } from 'ember-qunit';
 
-moduleForModel('dnafeaturecategory', {
+moduleForModel('file', {
   // Specify the other units that are required for this test.
   needs: []
 });

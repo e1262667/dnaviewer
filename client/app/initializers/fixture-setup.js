@@ -1,31 +1,52 @@
 import DS from 'ember-data';
-import DnaFeature from 'client/models/dnafeature';
-import DnaFeatureCategory from 'client/models/dnafeaturecategory';
-import DnaFeaturePattern from 'client/models/dnafeaturepattern';
-import DnaMoleculeDnaFeature from 'client/models/dnamolecule-dnafeature';
-import DnaMolecule from 'client/models/dnamolecule';
-import DnaMoleculeFile from 'client/models/dnamoleculefile';
+import Category from 'client/models/category';
+import Feature from 'client/models/feature';
+import File from 'client/models/file';
+import MoleculeFeature from 'client/models/molecule-feature';
+import Molecule from 'client/models/molecule';
 import Organisation from 'client/models/organisation';
+import Pattern from 'client/models/pattern';
 import Sequence from 'client/models/sequence';
 import User from 'client/models/user';
 
-var dnaFeatures = {};
-var dnaFeatureCategories = {};
-var dnaFeaturePatterns = {};
-var dnaMoleculeDnaFeatures = {};
-var dnaMolecules = {};
-var dnaMoleculeFiles = {};
+var categories = {};
+var features = {};
+var files = {};
+var moleculeFeatures = {};
+var molecules = {};
 var organisations = {};
+var patterns = {};
 var sequences = {};
 var users = {};
 
-function setUpDnaFeature(fixtureData) {
+function setUpCategory(fixtureData) {
   var id = fixtureData.id;
-  if (dnaFeatures[id]) {
+  if (categories[id]) {
     return;
   }
 
-  dnaFeatures[id] = {
+  categories[id] = {
+    accession: fixtureData.accession,
+    created: fixtureData.created,
+    description: fixtureData.description,
+    id: id,
+    location: fixtureData.location,
+    modified: fixtureData.modified,
+    name: fixtureData.name,
+    namespace: fixtureData.namespace,
+    organisation: fixtureData.organisationId,
+    properties: fixtureData.properties,
+    user: fixtureData.userId
+  };
+}
+
+function setUpFeature(fixtureData) {
+  var id = fixtureData.id;
+  if (features[id]) {
+    return;
+  }
+
+  features[id] = {
     accession: fixtureData.accession,
     category: fixtureData.dnafeaturecategoryId,
     created: fixtureData.created,
@@ -43,55 +64,34 @@ function setUpDnaFeature(fixtureData) {
     user: fixtureData.userId
   };
 
-  setUpDnaFeatureCategory(fixtureData.category);
-  setUpDnaFeaturePattern(fixtureData.pattern);
+  setUpCategory(fixtureData.category);
+  setUpPattern(fixtureData.pattern);
   setUpUser(fixtureData.user);
 }
 
-function setUpDnaFeatureCategory(fixtureData) {
+function setUpFile(fixtureData) {
   var id = fixtureData.id;
-  if (dnaFeatureCategories[id]) {
+  if (files[id]) {
     return;
   }
 
-  dnaFeatureCategories[id] = {
-    accession: fixtureData.accession,
-    created: fixtureData.created,
-    description: fixtureData.description,
-    id: id,
-    location: fixtureData.location,
-    modified: fixtureData.modified,
-    name: fixtureData.name,
-    namespace: fixtureData.namespace,
-    organisation: fixtureData.organisationId,
-    properties: fixtureData.properties,
-    user: fixtureData.userId
-  };
-}
-
-function setUpDnaFeaturePattern(fixtureData) {
-  var id = fixtureData.id;
-  if (dnaFeaturePatterns[id]) {
-    return;
-  }
-
-  var dnaFeaturePattern = {};
+  var file = {};
   for (var i in fixtureData) {
     if (fixtureData.hasOwnProperty(i)) {
-      dnaFeaturePattern[i] = fixtureData[i];
+      file[i] = fixtureData[i];
     }
   }
 
-  dnaFeaturePatterns[id] = dnaFeaturePattern;
+  files[id] = file;
 }
 
-function setUpDnaMoleculeDnaFeature(fixtureData) {
+function setUpMoleculeFeature(fixtureData) {
   var id = fixtureData.dnamoleculeId + '_' + fixtureData.dnafeatureId;
-  if (dnaMoleculeDnaFeatures[id]) {
+  if (moleculeFeatures[id]) {
     return;
   }
 
-  dnaMoleculeDnaFeatures[id] = {
+  moleculeFeatures[id] = {
     dnafeature: fixtureData.dnafeatureId,
     dnamolecule: fixtureData.dnamoleculeId,
     end: fixtureData.end,
@@ -100,16 +100,16 @@ function setUpDnaMoleculeDnaFeature(fixtureData) {
     strand: fixtureData.strand
   };
 
-  setUpDnaFeature(fixtureData.dnafeature);
+  setUpFeature(fixtureData.dnafeature);
 }
 
-function setUpDnaMolecule(fixtureData) {
+function setUpMolecule(fixtureData) {
   var id = fixtureData.id;
-  if (dnaMolecules[id]) {
+  if (molecules[id]) {
     return;
   }
 
-  dnaMolecules[id] = {
+  molecules[id] = {
     accession: fixtureData.accession,
     concNgUl: fixtureData.concNgUl,
     created: fixtureData.created,
@@ -138,30 +138,14 @@ function setUpDnaMolecule(fixtureData) {
     user: fixtureData.userId
   };
 
+  setUpFile(fixtureData.dnamoleculefile);
   for (var i in fixtureData.dnafeatures) {
     if (fixtureData.dnafeatures.hasOwnProperty(i)) {
-      setUpDnaMoleculeDnaFeature(fixtureData.dnafeatures[i]);
+      setUpMoleculeFeature(fixtureData.dnafeatures[i]);
     }
   }
-  setUpDnaMoleculeFile(fixtureData.dnamoleculefile);
   setUpSequence(fixtureData.sequence);
   setUpUser(fixtureData.user);
-}
-
-function setUpDnaMoleculeFile(fixtureData) {
-  var id = fixtureData.id;
-  if (dnaMoleculeFiles[id]) {
-    return;
-  }
-
-  var dnaMoleculeFile = {};
-  for (var i in fixtureData) {
-    if (fixtureData.hasOwnProperty(i)) {
-      dnaMoleculeFile[i] = fixtureData[i];
-    }
-  }
-
-  dnaMoleculeFiles[id] = dnaMoleculeFile;
 }
 
 function setUpOrganisation(fixtureData) {
@@ -178,6 +162,22 @@ function setUpOrganisation(fixtureData) {
   }
 
   organisations[id] = organisation;
+}
+
+function setUpPattern(fixtureData) {
+  var id = fixtureData.id;
+  if (patterns[id]) {
+    return;
+  }
+
+  var pattern = {};
+  for (var i in fixtureData) {
+    if (fixtureData.hasOwnProperty(i)) {
+      pattern[i] = fixtureData[i];
+    }
+  }
+
+  patterns[id] = pattern;
 }
 
 function setUpSequence(fixtureData) {
@@ -216,7 +216,7 @@ function setUpUser(fixtureData) {
 function setUpFixtureData(fixtureData) {
   for (var i in fixtureData) {
     if (fixtureData.hasOwnProperty(i)) {
-      setUpDnaMolecule(fixtureData[i]);
+      setUpMolecule(fixtureData[i]);
     }
   }
 }
@@ -224,26 +224,26 @@ function setUpFixtureData(fixtureData) {
 export function initialize(container, application) {
   setUpFixtureData(application.fixtureData);
 
-  DnaFeature.reopenClass({
-    FIXTURES: _.values(dnaFeatures)
+  Category.reopenClass({
+    FIXTURES: _.values(categories)
   });
-  DnaFeatureCategory.reopenClass({
-    FIXTURES: _.values(dnaFeatureCategories)
+  Feature.reopenClass({
+    FIXTURES: _.values(features)
   });
-  DnaFeaturePattern.reopenClass({
-    FIXTURES: _.values(dnaFeaturePatterns)
+  File.reopenClass({
+    FIXTURES: _.values(files)
   });
-  DnaMoleculeDnaFeature.reopenClass({
-    FIXTURES: _.values(dnaMoleculeDnaFeatures)
+  MoleculeFeature.reopenClass({
+    FIXTURES: _.values(moleculeFeatures)
   });
-  DnaMolecule.reopenClass({
-    FIXTURES: _.values(dnaMolecules)
-  });
-  DnaMoleculeFile.reopenClass({
-    FIXTURES: _.values(dnaMoleculeFiles)
+  Molecule.reopenClass({
+    FIXTURES: _.values(molecules)
   });
   Organisation.reopenClass({
     FIXTURES: _.values(organisations)
+  });
+  Pattern.reopenClass({
+    FIXTURES: _.values(patterns)
   });
   Sequence.reopenClass({
     FIXTURES: _.values(sequences)
