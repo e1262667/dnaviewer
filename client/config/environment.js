@@ -1,4 +1,7 @@
 /* jshint node: true */
+var fs = require('fs');
+
+var dnamolecule = JSON.parse(fs.readFileSync('../app/fixtures/dnamolecule.json', 'utf8'));
 
 module.exports = function(environment) {
   var ENV = {
@@ -16,6 +19,7 @@ module.exports = function(environment) {
     APP: {
       // Here you can pass flags/options to your application instance
       // when it is created
+      fixtureData: [dnamolecule]
     }
   };
 
