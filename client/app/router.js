@@ -6,6 +6,9 @@ var Router = Ember.Router.extend({
 });
 
 Router.map(function() {
+  this.resource('molecules', function() {
+    this.resource('molecule', { path: ':molecule_id' });
+  });
 });
 
 export default Router;
