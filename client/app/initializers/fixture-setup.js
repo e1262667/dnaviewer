@@ -135,7 +135,9 @@ function setUpMolecule(fixtureData) {
     privacy: fixtureData.privacy,
     properties: fixtureData.properties,
     sequence: fixtureData.sequenceId,
-    user: fixtureData.userId
+    user: fixtureData.userId,
+
+    raw: fixtureData
   };
 
   setUpFile(fixtureData.dnamoleculefile);

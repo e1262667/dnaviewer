@@ -1,3 +1,20 @@
-<h3>Molecule</h3>
+<h3>{{name}}</h3>
+
+{{plasmid-graph model=raw}}
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Start</th>
+    <th>End</th>
+  </tr>
+  {{#each moleculeFeature in model.dnafeatures}}
+    <tr>
+      <td>{{moleculeFeature.dnafeature.name}}</td>
+      <td>{{moleculeFeature.start}}</td>
+      <td>{{moleculeFeature.end}}</td>
+    </tr>
+  {{/each}}
+</table>
 
 {{link-to "Back" "molecules"}}

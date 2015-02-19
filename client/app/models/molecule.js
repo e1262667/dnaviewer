@@ -6,8 +6,8 @@ export default DS.Model.extend({
   created: DS.attr(),
   deleted: DS.attr(),
   description: DS.attr(),
-  dnafeatures: DS.hasMany('molecule-feature'),
-  dnamoleculefile: DS.belongsTo('file'),
+  dnafeatures: DS.hasMany('molecule-feature', { async: true }),
+  dnamoleculefile: DS.belongsTo('file', { async: true }),
   externalIdentifier: DS.attr(),
   host: DS.attr(),
   isAvailable: DS.attr(),
@@ -19,9 +19,11 @@ export default DS.Model.extend({
   molWeight: DS.attr(),
   name: DS.attr(),
   namespace: DS.attr(),
-  organisation: DS.belongsTo('organisation'),
+  organisation: DS.belongsTo({ async: true }),
   privacy: DS.attr(),
   properties: DS.attr(),
-  sequence: DS.belongsTo('sequence'),
-  user: DS.belongsTo('user')
+  sequence: DS.belongsTo({ async: true }),
+  user: DS.belongsTo({ async: true }),
+
+  raw: DS.attr()
 });

@@ -4,5 +4,5 @@ export default DS.Model.extend({
   csrfToken: DS.attr(),
   email: DS.attr(),
   name: DS.attr(),
-  organisation: DS.belongsTo('organisation')
+  organisation: DS.belongsTo({ async: true })
 });

@@ -8,7 +8,7 @@ export default DS.Model.extend({
   modified: DS.attr(),
   name: DS.attr(),
   namespace: DS.attr(),
-  organisation: DS.belongsTo('organisation'),
+  organisation: DS.belongsTo({ async: true }),
   properties: DS.attr(),
-  user: DS.belongsTo('user')
+  user: DS.belongsTo({ async: true })
 });

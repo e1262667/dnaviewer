@@ -13,6 +13,8 @@
     "ember-qunit": "0.2.8",
     "ember-qunit-notifications": "0.0.7",
     "qunit": "~1.17.1",
-    "underscore": "~1.7.0"
+    "underscore": "~1.7.0",
+    "d3": "~3.5.5",
+    "d3.reusable": "~0.1.1"
   }
 }
