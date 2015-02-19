@@ -3,7 +3,7 @@ import {
   test
 } from 'ember-qunit';
 
-moduleForComponent('plasmid-graph', {
+moduleForComponent('plasmid-map', {
   // specify the other units that are required for this test
   // needs: ['component:foo', 'helper:bar']
 });
