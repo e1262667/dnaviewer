@@ -1,18 +1,20 @@
 <h3>{{name}}</h3>
 
-{{plasmid-map model=raw}}
+{{plasmid-map model=model.raw}}
 
 <table>
   <tr>
     <th>Name</th>
     <th>Start</th>
     <th>End</th>
+    <th>Strand</th>
   </tr>
-  {{#each moleculeFeature in model.dnafeatures}}
+  {{#each moleculeFeature in dnafeatures}}
     <tr>
       <td>{{moleculeFeature.dnafeature.name}}</td>
       <td>{{moleculeFeature.start}}</td>
       <td>{{moleculeFeature.end}}</td>
+      <td>{{moleculeFeature.strand}}</td>
     </tr>
   {{/each}}
 </table>

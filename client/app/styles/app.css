@@ -2,9 +2,12 @@
   margin: 0 auto;
 }
 
-.cds {
-  fill: black;
+.cds.forward {
+  fill: green;
+}
+.cds.backward {
+  fill: red;
 }
 .cds:hover {
-  fill: red;
+  fill: yellow;
 }

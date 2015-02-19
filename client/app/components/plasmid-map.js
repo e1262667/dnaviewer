@@ -60,7 +60,9 @@ var PlasmidGraph = d3.reusable(function(me, data) {
     .data(data);
   var cdsEnter = cds.enter()
     .append('path')
-    .attr('class', 'cds');
+    .attr('class', function(d) {
+      return 'cds ' + (d.strand > 0 ? 'forward' : 'backward');
+    });
 
   return function() {
     var width = me.width(),
