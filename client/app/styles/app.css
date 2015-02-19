@@ -1,4 +1,8 @@
-.cds { 
+.plasmid-map {
+  margin: 0 auto;
+}
+
+.cds {
   fill: black;
 }
 .cds:hover {

@@ -96,18 +96,20 @@ var PlasmidGraph = d3.reusable(function(me, data) {
 });
 
 export default Ember.Component.extend({
+  classNames: ['plasmid-map'],
   didInsertElement: function() {
     var graph = new PlasmidGraph();
 
     var $this = $('#' + this.elementId);
 
     function updateSize() {
-      var width = $this.width();
-      var height = width;
+      var size = $this.parent().width() - 20;
       graph.options({
-        width: width,
-        height: height
+        width: size,
+        height: size
       });
+      $this.width(size);
+      $this.height(size);
     }
     updateSize();
     $(window).resize(updateSize);
