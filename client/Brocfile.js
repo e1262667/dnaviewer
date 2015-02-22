@@ -20,5 +20,6 @@ var app = new EmberApp();
 app.import(app.bowerDirectory + '/underscore/underscore.js');
 app.import(app.bowerDirectory + '/d3/d3.js');
 app.import(app.bowerDirectory + '/d3.reusable/d3.reusable.js');
+app.import(app.bowerDirectory + '/clone/clone.js');
 
 module.exports = app.toTree();

@@ -11,3 +11,8 @@
 .cds:hover {
   fill: yellow;
 }
+
+polyline {
+  fill: none;
+  stroke: black;
+}
