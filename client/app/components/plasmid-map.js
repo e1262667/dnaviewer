@@ -1,7 +1,5 @@
 import Ember from 'ember';
 
-var duration = 1000;
-
 var PlasmidGraph = d3.reusable(function(me, data) {
   var arc = d3.svg.arc()
     .startAngle(0)
@@ -64,6 +62,8 @@ var PlasmidGraph = d3.reusable(function(me, data) {
       return 'cds ' + (d.strand > 0 ? 'forward' : 'backward');
     });
 
+  var duration = 1000;
+
   return function() {
     var width = me.width(),
       height = me.height(),
@@ -77,7 +77,7 @@ var PlasmidGraph = d3.reusable(function(me, data) {
 
     outline.attr('d', arc);
 
-  for (var i = 0; i < cdsArcs.length; i++) {
+    for (var i = 0; i < cdsArcs.length; i++) {
       outerRadius = innerRadius;
       innerRadius = outerRadius - height / 16;
       cdsArcs[i]
@@ -94,6 +94,7 @@ var PlasmidGraph = d3.reusable(function(me, data) {
       .attr('height', height);
 
     cdsEnter.transition().duration(duration).attrTween('d', arcTween);
+    duration = 0;
   };
 });
 
