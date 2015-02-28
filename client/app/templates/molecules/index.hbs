@@ -1,7 +1,14 @@
 <h3>Molecules</h3>
 
-{{#each molecule in model}}
-  <div>Name: {{link-to molecule.name "molecule" molecule}}</div>
-{{/each}}
+<table>
+  <tr>
+    <th>Name</th>
+  </tr>
+  {{#each molecule in model}}
+    <tr>
+      <td>{{link-to molecule.name "molecule" molecule}}</td>
+    </tr>
+  {{/each}}
+</table>
 
 {{link-to "Back" "application"}}

@@ -1,15 +1,20 @@
 import Ember from 'ember';
 
 var PlasmidGraph = d3.reusable(function(me, data) {
+  var twoPi = Math.PI * 2;
   var outerArc = d3.svg.arc();
-  var outlineArc = d3.svg.arc()
-    .startAngle(0)
-    .endAngle(Math.PI * 2);
+  var outlineArc = d3.svg.arc();
   var cdsArcs = {};
+  var numOfTicks = 16;
 
   var x = d3.scale.linear()
     .domain([0, Math.max.apply(null, data.map(function(d) { return d.end; }))])
-    .range([0, Math.PI * 2]);
+    .range([0, twoPi]);
+
+  var ticks = [];
+  for (var i = 1; i <= numOfTicks; i++) {
+    ticks.push(Math.round(x.invert(twoPi / numOfTicks * i)));
+  }
 
   var svg = d3.select(this)
     .append('svg');
@@ -57,13 +62,30 @@ var PlasmidGraph = d3.reusable(function(me, data) {
     })
     .attr('class', function(d) {
       return 'cds ' + (d.strand > 0 ? 'forward' : 'backward');
+    })
+    .on('click', function(d) {
+      me.options('sendClick')(d.dnafeature.id);
     });
 
-  var text = g.selectAll('text')
+  var axis = g.selectAll('axis-line')
+    .data(ticks);
+  var axisText = g.selectAll('axis-text')
+    .data(ticks);
+
+  axis.enter()
+    .append('polyline')
+    .attr('class', 'axis-line');
+  axisText.enter()
+    .append('text')
+    .attr('class', 'axis-text')
+    .text(function(d) { return d; });
+
+  var text = g.selectAll('.label-text')
     .data(data);
 
   text.enter()
     .append('text')
+    .attr('class', 'label-text')
     .attr('dy', '.35em')
     .text(function(d) {
       return d.dnafeature.name;
@@ -72,11 +94,12 @@ var PlasmidGraph = d3.reusable(function(me, data) {
   text.exit()
     .remove();
 
-  var polyline = g.selectAll('polyline')
+  var polyline = g.selectAll('.label-line')
     .data(data);
 
   polyline.enter()
-    .append('polyline');
+    .append('polyline')
+    .attr('class', 'label-line');
 
   polyline.exit()
     .remove();
@@ -172,6 +195,8 @@ var PlasmidGraph = d3.reusable(function(me, data) {
       innerRadius = outerRadius - 1;
 
     outlineArc
+      .startAngle(0)
+      .endAngle(twoPi)
       .outerRadius(outerRadius)
       .innerRadius(innerRadius);
 
@@ -195,6 +220,27 @@ var PlasmidGraph = d3.reusable(function(me, data) {
       .attr('width', width)
       .attr('height', height);
 
+    axis.attr('points', function(d, i) {
+      var rads = twoPi / numOfTicks * (i + 1);
+      var outlinePos = outlineArc
+        .startAngle(rads)
+        .endAngle(rads)
+        .centroid();
+      var outerPos = outerArc
+        .startAngle(rads)
+        .endAngle(rads)
+        .centroid();
+
+      var angle = rads * 180 / Math.PI;
+      var reverse = angle > 90 && angle < 270;
+      d3.select(axisText[0][i])
+        .attr('transform', 'translate(' + outerPos + ') rotate(' + (angle + (reverse ? 180 : 0)) + ')');
+
+      var midPos = [(outlinePos[0] + outerPos[0]) / 2, (outlinePos[1] + outerPos[1]) / 2];
+
+      return [outlinePos, midPos];
+    });
+
     cdsEnter.transition().duration(duration).attrTween('d', arcTween);
 
     var lastT = 0;
@@ -212,12 +258,11 @@ var PlasmidGraph = d3.reusable(function(me, data) {
             .endAngle(end)
             .centroid();
 
-          pos[0] = outerArc.outerRadius()() * ((start + end) / 2 < Math.PI ? 1 : -1);
-          var translate = 'translate('+ pos +')';
-
-          pos[0] *= 0.95;
+          pos[0] = outerArc.outerRadius()() * 1.1 * ((start + end) / 2 < Math.PI ? 1 : -1);
           poly.attr('points', [arc.centroid(), outerArc.centroid(), pos]);
-          // console.log('t');
+
+          pos[0] *= 1.05;
+          var translate = 'translate('+ pos +')';
 
           el.attr('transform', translate);
           //if (i === data.length - 1) {
@@ -280,8 +325,13 @@ export default Ember.Component.extend({
   classNames: ['plasmid-map'],
   didInsertElement: function() {
     var graph = new PlasmidGraph();
+    var self = this;
 
     var $this = $('#' + this.elementId);
+
+    graph.options('sendClick', function(id) {
+      self.sendAction('click', id);
+    });
 
     function updateSize() {
       var width = $this.parent().width() - 20;
@@ -300,7 +350,6 @@ export default Ember.Component.extend({
       .datum(this.model.dnafeatures)
       .call(graph);
 
-    var self = this;
     $('.cds').hover(function(event) {
       self.sendAction('hoverIn', event);
     }, function(event) {

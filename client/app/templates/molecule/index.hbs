@@ -1,0 +1,20 @@
+{{plasmid-map model=model.raw hoverIn="hoverIn" hoverOut="hoverOut" click="click"}}
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Start</th>
+    <th>End</th>
+    <th>Strand</th>
+  </tr>
+  {{#each moleculeFeature in dnafeatures}}
+    <tr {{bind-attr name=moleculeFeature.dnafeature.id}} class="feature-row">
+      <td>{{link-to moleculeFeature.dnafeature.name "feature" moleculeFeature.dnafeature}}</td>
+      <td>{{moleculeFeature.start}}</td>
+      <td>{{moleculeFeature.end}}</td>
+      <td>{{moleculeFeature.strand}}</td>
+    </tr>
+  {{/each}}
+</table>
+
+{{link-to "Back" "molecules"}}

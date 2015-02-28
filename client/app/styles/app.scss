@@ -1,0 +1,48 @@
+.plasmid-map {
+  margin: 0 auto;
+}
+
+.cds {
+  cursor: pointer;
+
+  &.forward {
+    fill: green;
+  }
+  &.backward {
+    fill: red;
+  }
+  &:hover, &.highlight {
+    fill: yellow;
+  }
+}
+
+polyline {
+  fill: none;
+  stroke: black;
+}
+
+.axis-text {
+  text-anchor: middle;
+  font-size: .75em;
+}
+
+.feature-row {
+  &:hover, &.highlight {
+    background-color: yellow;
+  }
+}
+
+table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+td {
+  vertical-align: top;
+  word-wrap: break-word;
+}
+
+.feature-table td:first-child {
+  width: 25%;
+  text-align: right;
+}

@@ -7,7 +7,10 @@ var Router = Ember.Router.extend({
 
 Router.map(function() {
   this.resource('molecules', function() {
-    this.resource('molecule', { path: ':molecule_id' });
+    this.resource('molecule', { path: ':molecule_id' }, function() {
+      this.resource('feature', { path: 'features/:feature_id' }, function() {
+      });
+    });
   });
 });
 

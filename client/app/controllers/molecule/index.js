@@ -8,8 +8,6 @@ export default Ember.Controller.extend({
   }.observes('model.dnafeatures'),
 
   dnafeaturesChanged: function() {
-    console.log('dnafeaturesChanged');
-    console.log(this.get('dnafeatures'));
     Ember.run.scheduleOnce('afterRender', this, function() {
       var el;
       $('.feature-row').hover(function() {
@@ -28,6 +26,9 @@ export default Ember.Controller.extend({
     },
     hoverOut: function(event) {
       $('.feature-row[name="' + $(event.target).attr('name') + '"]').removeClass('highlight');
+    },
+    click: function(id) {
+      this.transitionToRoute('feature', id);
     }
   }
 });
