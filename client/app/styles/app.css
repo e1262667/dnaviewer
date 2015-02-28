@@ -8,11 +8,15 @@
 .cds.backward {
   fill: red;
 }
-.cds:hover {
+.cds:hover, .cds.highlight {
   fill: yellow;
 }
 
 polyline {
   fill: none;
   stroke: black;
+}
+
+.feature-row:hover, .feature-row.highlight {
+  background-color: yellow;
 }

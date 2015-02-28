@@ -1,6 +1,6 @@
 <h3>{{name}}</h3>
 
-{{plasmid-map model=model.raw}}
+{{plasmid-map model=model.raw hoverIn="hoverIn" hoverOut="hoverOut"}}
 
 <table>
   <tr>
@@ -10,7 +10,7 @@
     <th>Strand</th>
   </tr>
   {{#each moleculeFeature in dnafeatures}}
-    <tr>
+    <tr {{bind-attr name=moleculeFeature.dnafeature.id}} class="feature-row">
       <td>{{moleculeFeature.dnafeature.name}}</td>
       <td>{{moleculeFeature.start}}</td>
       <td>{{moleculeFeature.end}}</td>

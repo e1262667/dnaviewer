@@ -52,6 +52,9 @@ var PlasmidGraph = d3.reusable(function(me, data) {
     .data(data);
   var cdsEnter = cds.enter()
     .append('path')
+    .attr('name', function(d) {
+      return d.dnafeature.id;
+    })
     .attr('class', function(d) {
       return 'cds ' + (d.strand > 0 ? 'forward' : 'backward');
     });
@@ -88,58 +91,76 @@ var PlasmidGraph = d3.reusable(function(me, data) {
   var spacing = 12;
 
   function relax() {
-      var again = false;
-      text.each(function (d, i) {
-          var a = this;
-          var da = d3.select(a);
-          var transformA = da.attr('transform');
-          var y1 = getTranslateY(transformA);
-          text.each(function (d, j) {
-              var b = this;
-              // a & b are the same element and don't collide.
-              if (a == b) return;
-              var db = d3.select(b);
-              // a & b are on opposite sides of the chart and
-              // don't collide
-              if (da.attr('text-anchor') != db.attr('text-anchor')) return;
-              // Now let's calculate the distance between
-              // these elements. 
-              var transformB = db.attr('transform');
-              var y2 = getTranslateY(transformB);
-              var deltaY = y1 - y2;
+    var again = false;
+    text.each(function(d, i) {
+      if (again) return;
 
-              // Our spacing is greater than our specified spacing,
-              // so they don't collide.
-              if (Math.abs(deltaY) > spacing) return;
+      var a = this;
+      var da = d3.select(a);
+      var transformA = da.attr('transform');
+      if (!transformA) return;
+      var y1 = getTranslateY(transformA);
+      text.each(function() {
+        if (again) return;
 
-              if (deltaY >= 0) return;
+        var b = this;
+        // a & b are the same element and don't collide.
+        if (a == b) return;
+        var db = d3.select(b);
+        // a & b are on opposite sides of the chart and
+        // don't collide
+        if (da.attr('text-anchor') != db.attr('text-anchor')) return;
+        // Now let's calculate the distance between
+        // these elements. 
+        var transformB = db.attr('transform');
+        if (!transformB) return;
+        var y2 = getTranslateY(transformB);
+        var deltaY = y1 - y2;
 
-              // If the labels collide, we'll push each 
-              // of the two labels up and down a little bit.
-              again = true;
-              var sign = y1 > 0 ? 1 : -1;
-              var adjust = sign * alpha;
-              da.attr('transform', transformA.substring(0, transformA.indexOf(',') + 1) + (y1 - alpha) + ')');
-              //db.attr('transform', transformB.substring(0, transformB.indexOf(',') + 1) + (y2 - adjust) + ')');
-          });
+        // Our spacing is greater than our specified spacing,
+        // so they don't collide.
+        if (Math.abs(deltaY) > spacing) return;
+
+        if (y1 < 0 && deltaY > 0 || y1 > 0 && deltaY < 0) return;
+
+        // If the labels collide, we'll push each 
+        // of the two labels up and down a little bit.
+        again = true;
+        var sign = y1 > 0 ? 1 : -1;
+        var adjust = sign * alpha;
+        da.attr('transform', transformA.substring(0, transformA.indexOf(',') + 1) + (y1 + adjust) + ')');
+        // console.log(d.dnafeature.name + ',' + transformA.substring(0, transformA.indexOf(',') + 1) + (y1 + adjust) + ')');
+        //db.attr('transform', transformB.substring(0, transformB.indexOf(',') + 1) + (y2 - adjust) + ')');
+
+        var poly = d3.select(polyline[0][i]);
+        var points = poly.attr('points').split(',');
+        points[3] = points[5] = y1;
+        poly.attr('points', points.join(','));
       });
-      // Adjust our line leaders here
-      // so that they follow the labels. 
-      if(again) {
-          var labelElements = text[0];
-          // textLines.attr('y2',function(d,i) {
-          //     labelForLine = d3.select(labelElements[i]);
-          //     return labelForLine.attr('y');
-          // });
-          //setTimeout(relax,0);
-          relax();
-      }
+    });
+    // Adjust our line leaders here
+    // so that they follow the labels. 
+    if(again) {
+      var labelElements = text[0];
+      // polyline.attr('points', function(d, i) {
+      //   var labelForLine = d3.select(labelElements[i]);
+      //   var transform = labelForLine.attr('transform');
+      //   if (!transform) return;
+      //   var y = getTranslateY(transform);
+      //   var poly = d3.select(this);
+      //   var points = poly.attr('points').split(',');
+      //   points[3] = points[5] = y;
+      //   return points.join(',');
+      // });
+      //setTimeout(relax,0);
+      relax();
+    }
   }
 
   return function() {
     var width = me.width(),
       height = me.height(),
-      radius = Math.min(width, height) / 4;
+      radius = (height / 2) * 0.8;
 
     var isRelaxed = false;
 
@@ -158,7 +179,7 @@ var PlasmidGraph = d3.reusable(function(me, data) {
 
     for (var i in cdsArcs) {
       var level = dataLevels[i];
-      var size = height / 16;
+      var size = height / 8;
       var oRadius = innerRadius - size * level;
       var iRadius = outerRadius - size * (level + 1);
       cdsArcs[i]
@@ -176,56 +197,80 @@ var PlasmidGraph = d3.reusable(function(me, data) {
 
     cdsEnter.transition().duration(duration).attrTween('d', arcTween);
 
+    var lastT = 0;
     text.transition().duration(duration)
-      .attrTween('transform', function(d) {
+      .attrTween('transform', function(d, i) {
         var start = x(d.start);
-        var i = d3.interpolate(start, x(d.end));
+        var interpolate = d3.interpolate(start, x(d.end));
+        var arc = cdsArcs[d.dnafeatureId];
+        var poly = d3.select(polyline[0][i]);
+        var el = d3.select(this);
         return function(t) {
-          var end = i(t);
+          var end = interpolate(t);
           var pos = outerArc
             .startAngle(start)
             .endAngle(end)
             .centroid();
+
           pos[0] = outerArc.outerRadius()() * ((start + end) / 2 < Math.PI ? 1 : -1);
-          return 'translate('+ pos +')';
+          var translate = 'translate('+ pos +')';
+
+          pos[0] *= 0.95;
+          poly.attr('points', [arc.centroid(), outerArc.centroid(), pos]);
+          // console.log('t');
+
+          el.attr('transform', translate);
+          //if (i === data.length - 1) {
+            relax();
+          //}
+
+          return el.attr('transform');
         };
       })
       .attrTween('text-anchor', function(d) {
         var start = x(d.start);
-        var i = d3.interpolate(start, x(d.end));
+        var interpolate = d3.interpolate(start, x(d.end));
         return function(t) {
-          var end = i(t);
+          var end = interpolate(t);
           return (start + end) / 2 < Math.PI ? 'start' : 'end';
         };
-      });
-
-    polyline.transition().duration(duration)
-      .attrTween('points', function(d, i) {
-        var start = x(d.start);
-        var i = d3.interpolate(start, x(d.end));
-        var arc = cdsArcs[d.dnafeatureId];
-        var lastT = 0;
-        return function(t) {
-          if (t !== lastT) {
-            relax();
-            lastT = t;
-          }
-          var end = i(t);
-          var pos = outerArc
-            .startAngle(start)
-            .endAngle(end)
-            .centroid();
-          pos[0] = outerArc.outerRadius()() * 0.95 * ((start + end) / 2 < Math.PI ? 1 : -1);
-          return [arc.centroid(), outerArc.centroid(), pos];
-        };
       })
-      .each('end', function() {
-        if (!isRelaxed) {
+      .each('end', function(d, i) {
+        if (i === data.length - 1) {
           //setTimeout(relax, 0);
+          // console.log('end');
           relax();
           isRelaxed = true;
         }
       });
+
+    // polyline.transition().duration(duration)
+    //   .attrTween('points', function(d, i) {
+    //     var start = x(d.start);
+    //     var i = d3.interpolate(start, x(d.end));
+    //     var arc = cdsArcs[d.dnafeatureId];
+    //     var lastT = 0;
+    //     return function(t) {
+    //       if (t !== lastT) {
+    //         relax();
+    //         lastT = t;
+    //       }
+    //       var end = i(t);
+    //       var pos = outerArc
+    //         .startAngle(start)
+    //         .endAngle(end)
+    //         .centroid();
+    //       pos[0] = outerArc.outerRadius()() * 0.95 * ((start + end) / 2 < Math.PI ? 1 : -1);
+    //       return [arc.centroid(), outerArc.centroid(), pos];
+    //     };
+    //   })
+    //   .each('end', function() {
+    //     if (!isRelaxed) {
+    //       //setTimeout(relax, 0);
+    //       relax();
+    //       isRelaxed = true;
+    //     }
+    //   });
 
     duration = 0;
   };
@@ -239,13 +284,14 @@ export default Ember.Component.extend({
     var $this = $('#' + this.elementId);
 
     function updateSize() {
-      var size = $this.parent().width() - 20;
+      var width = $this.parent().width() - 20;
+      var height = width * 0.5;
       graph.options({
-        width: size,
-        height: size
+        width: width,
+        height: height
       });
-      $this.width(size);
-      $this.height(size);
+      $this.width(width);
+      $this.height(height);
     }
     updateSize();
     $(window).resize(updateSize);
@@ -253,5 +299,16 @@ export default Ember.Component.extend({
     d3.select($this[0])
       .datum(this.model.dnafeatures)
       .call(graph);
+
+    var self = this;
+    $('.cds').hover(function(event) {
+      self.sendAction('hoverIn', event);
+    }, function(event) {
+      self.sendAction('hoverOut', event);
+    });
   }
+
+  // click: function(event) {
+  //   this.sendAction('action', event);
+  // }
 });
