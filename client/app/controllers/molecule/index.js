@@ -11,10 +11,10 @@ export default Ember.Controller.extend({
     Ember.run.scheduleOnce('afterRender', this, function() {
       var el;
       $('.feature-row').hover(function() {
-        el = $('.cds[name="' + $(this).attr('name') + '"]');
+        el = $('.features[name="' + $(this).attr('name') + '"]');
         el.attr('class', (el.attr('class') + ' highlight').trim());
       }, function() {
-        el = $('.cds[name="' + $(this).attr('name') + '"]');
+        el = $('.features[name="' + $(this).attr('name') + '"]');
         el.attr('class', el.attr('class').replace('highlight', '').trim());
       });
     });
