@@ -24,6 +24,10 @@ polyline {
 .axis-text {
   text-anchor: middle;
   font-size: .75em;
+
+  &.reverse {
+    dominant-baseline: hanging;
+  }
 }
 
 .feature-row {

@@ -87,29 +87,29 @@ export default d3.reusable(function(me, data) {
     });
 
   // create the length tick axis lines and labels
-  var axisLine = g.selectAll('axis-line')
+  var axisLines = g.selectAll('axis-line')
     .data(ticks);
-  var axisText = g.selectAll('axis-text')
+  var axisTexts = g.selectAll('axis-text')
     .data(ticks);
 
-  axisLine.enter()
+  axisLines.enter()
     .append('polyline')
     .attr('class', 'axis-line');
-  axisText.enter()
+  axisTexts.enter()
     .append('text')
     .attr('class', 'axis-text')
     .text(function(d) { return d; });
 
   // create the feature labels and lines
-  var labelLine = g.selectAll('.label-line')
+  var labelLines = g.selectAll('.label-line')
     .data(data);
-  var labelText = g.selectAll('.label-text')
+  var labelTexts = g.selectAll('.label-text')
     .data(data);
 
-  labelLine.enter()
+  labelLines.enter()
     .append('polyline')
     .attr('class', 'label-line');
-  labelText.enter()
+  labelTexts.enter()
     .append('text')
     .attr('class', 'label-text')
     .attr('dy', '.35em')
@@ -132,7 +132,7 @@ export default d3.reusable(function(me, data) {
 
   function relax() {
     var isRelaxed = true;
-    labelText.each(function(d, i) {
+    labelTexts.each(function(d, i) {
       if (!isRelaxed) {
         return;
       }
@@ -147,27 +147,28 @@ export default d3.reusable(function(me, data) {
       }
 
       var y1 = getTranslateY(transformA);
-      labelText.each(function() {
+      labelTexts.each(function() {
         if (!isRelaxed) {
           return;
         }
 
         var b = this;
-        // a & b are the same element and don't collide.
+
+        // same label
         if (a === b) {
           return;
         }
 
         var db = d3.select(b);
-        // a & b are on opposite sides of the chart and
-        // don't collide
+
+        // ignore opposite sides of the graph
         if (da.attr('text-anchor') != db.attr('text-anchor')) {
           return;
         }
 
-        // Now let's calculate the distance between
-        // these elements. 
         var transformB = db.attr('transform');
+
+        // first round this is empty
         if (!transformB) {
           return;
         }
@@ -175,50 +176,67 @@ export default d3.reusable(function(me, data) {
         var y2 = getTranslateY(transformB);
         var deltaY = y1 - y2;
 
-        // Our spacing is greater than our specified spacing,
-        // so they don't collide.
+        // far enough apart
         if (Math.abs(deltaY) > spacing) {
           return;
         }
 
+        // this prevents two labels from continually crossing each other's path
+        // it happens when deltaY is less than spacing
         if (y1 < 0 && deltaY > 0 || y1 > 0 && deltaY < 0) {
           return;
         }
 
-        // If the labels collide, we'll push each 
-        // of the two labels up and down a little bit.
+        // we have a collision
         isRelaxed = false;
-        var sign = y1 > 0 ? 1 : -1;
-        var adjust = sign * alpha;
-        da.attr('transform', transformA.substring(0, transformA.indexOf(',') + 1) + (y1 + adjust) + ')');
-        // console.log(d.dnafeature.name + ',' + transformA.substring(0, transformA.indexOf(',') + 1) + (y1 + adjust) + ')');
-        //db.attr('transform', transformB.substring(0, transformB.indexOf(',') + 1) + (y2 - adjust) + ')');
 
-        var poly = d3.select(labelLine[0][i]);
-        var points = poly.attr('points').split(',');
+        // up or down
+        var sign = y1 > 0 ? 1 : -1;
+
+        // pixel change
+        var adjust = sign * alpha;
+
+        // new transform
+        transformA = transformA.substring(0, transformA.indexOf(',') + 1) + (y1 + adjust) + ')';
+        da.attr('transform', transformA);
+
+        // move the label lie up as well
+        var labelLine = d3.select(labelLines[0][i]);
+        var points = labelLine.attr('points').split(',');
         points[3] = points[5] = y1;
-        poly.attr('points', points.join(','));
+        labelLine.attr('points', points.join(','));
       });
     });
-    // Adjust our line leaders here
-    // so that they follow the labels. 
+
+    // recurse
     if (!isRelaxed) {
-      var labelElements = labelText[0];
       relax();
     }
   }
 
+  // this function runs everytime an option changes
   return function() {
     var width = me.width(),
-      height = me.height(),
-      radius = (height / 2) * 0.8;
+      height = me.height();
+
+    svg
+      .attr('width', width)
+      .attr('height', height);
+
+    // translating the center to the new center
+    g.attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
+
+    var roomForLabels = 0.8,
+      radius = (height / 2) * roomForLabels;
 
     outerArc
       .outerRadius(radius)
       .innerRadius(radius);
 
-    var outerRadius = radius * 0.95,
-      innerRadius = outerRadius - 1;
+    var outlineAdjustment = 0.95,
+      outlineWidth = 1,
+      outerRadius = radius * outlineAdjustment,
+      innerRadius = outerRadius - outlineWidth;
 
     outlineArc
       .startAngle(0)
@@ -226,27 +244,27 @@ export default d3.reusable(function(me, data) {
       .outerRadius(outerRadius)
       .innerRadius(innerRadius);
 
+    // draws the outline
     outline.attr('d', outlineArc);
 
+    var numOfLevelsPossible = 8;
+
+    // each feature has its own arc because
+    // it could be on any level
     for (var i in featureArcs) {
       var level = featureLevels[i];
-      var size = height / 8;
-      var oRadius = innerRadius - size * level;
-      var iRadius = outerRadius - size * (level + 1);
+      var LevelSize = height / numOfLevelsPossible;
+      var oRadius = innerRadius - LevelSize * level;
+      var iRadius = outerRadius - LevelSize * (level + 1);
       featureArcs[i]
         .outerRadius(oRadius)
         .innerRadius(iRadius);
     }
 
-    g.attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
-
+    // data bind features
     featuresEnter.data(data);
 
-    svg
-      .attr('width', width)
-      .attr('height', height);
-
-    axisLine.attr('points', function(d, i) {
+    axisLines.attr('points', function(d, i) {
       var rads = twoPi / numOfTicks * (i + 1);
       var outlinePos = outlineArc
         .startAngle(rads)
@@ -259,8 +277,9 @@ export default d3.reusable(function(me, data) {
 
       var angle = rads * 180 / Math.PI;
       var reverse = angle > 90 && angle < 270;
-      d3.select(axisText[0][i])
-        .attr('transform', 'translate(' + outerPos + ') rotate(' + (angle + (reverse ? 180 : 0)) + ')');
+      d3.select(axisTexts[0][i])
+        .attr('transform', 'translate(' + outerPos + ') rotate(' + (angle + (reverse ? 180 : 0)) + ')')
+        .classed('reverse', reverse);
 
       var midPos = [(outlinePos[0] + outerPos[0]) / 2, (outlinePos[1] + outerPos[1]) / 2];
 
@@ -270,12 +289,12 @@ export default d3.reusable(function(me, data) {
     featuresEnter.transition().duration(duration).attrTween('d', arcTween);
 
     var lastT = 0;
-    labelText.transition().duration(duration)
+    labelTexts.transition().duration(duration)
       .attrTween('transform', function(d, i) {
         var start = x(d.start);
         var interpolate = d3.interpolate(start, x(d.end));
         var arc = featureArcs[d.dnafeatureId];
-        var poly = d3.select(labelLine[0][i]);
+        var poly = d3.select(labelLines[0][i]);
         var el = d3.select(this);
         return function(t) {
           var end = interpolate(t);
