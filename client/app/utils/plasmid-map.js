@@ -38,12 +38,12 @@ export default d3.reusable(function(me, data) {
   // this is where inner arcs are created
   // featureLevels is a lookup that keeps track of overlapping
   var featureLevels = {};
-  for (var i = 0; i < data.length; i++) {
-    var d = data[i];
+  for (var j = 0; j < data.length; j++) {
+    var d = data[j];
     featureArcs[d.dnafeatureId] = d3.svg.arc();
     featureLevels[d.dnafeatureId] = 0;
 
-    var previous = data[i - 1];
+    var previous = data[j - 1];
     if (!previous) {
       continue;
     }
@@ -162,7 +162,7 @@ export default d3.reusable(function(me, data) {
         var db = d3.select(b);
 
         // ignore opposite sides of the graph
-        if (da.attr('text-anchor') != db.attr('text-anchor')) {
+        if (da.attr('text-anchor') !== db.attr('text-anchor')) {
           return;
         }
 
@@ -264,6 +264,7 @@ export default d3.reusable(function(me, data) {
     // data bind features
     featuresEnter.data(data);
 
+    // draw the axis
     axisLines.attr('points', function(d, i) {
       var rads = twoPi / numOfTicks * (i + 1);
       var outlinePos = outlineArc
@@ -276,25 +277,29 @@ export default d3.reusable(function(me, data) {
         .centroid();
 
       var angle = rads * 180 / Math.PI;
-      var reverse = angle > 90 && angle < 270;
+
+      // reverse the text on the bottom half
+      var isReversed = angle > 90 && angle < 270;
+
       d3.select(axisTexts[0][i])
-        .attr('transform', 'translate(' + outerPos + ') rotate(' + (angle + (reverse ? 180 : 0)) + ')')
-        .classed('reverse', reverse);
+        .attr('transform', 'translate(' + outerPos + ') rotate(' + (angle + (isReversed ? 180 : 0)) + ')')
+        .classed('reverse', isReversed);
 
       var midPos = [(outlinePos[0] + outerPos[0]) / 2, (outlinePos[1] + outerPos[1]) / 2];
 
       return [outlinePos, midPos];
     });
 
+    // animated the features paths
     featuresEnter.transition().duration(duration).attrTween('d', arcTween);
 
-    var lastT = 0;
+    // draw the labels and animate to follow the paths
     labelTexts.transition().duration(duration)
       .attrTween('transform', function(d, i) {
         var start = x(d.start);
         var interpolate = d3.interpolate(start, x(d.end));
         var arc = featureArcs[d.dnafeatureId];
-        var poly = d3.select(labelLines[0][i]);
+        var labelLine = d3.select(labelLines[0][i]);
         var el = d3.select(this);
         return function(t) {
           var end = interpolate(t);
@@ -303,17 +308,26 @@ export default d3.reusable(function(me, data) {
             .endAngle(end)
             .centroid();
 
-          pos[0] = outerArc.outerRadius()() * 1.1 * ((start + end) / 2 < Math.PI ? 1 : -1);
-          poly.attr('points', [arc.centroid(), outerArc.centroid(), pos]);
+          // make the corner a little past the axis
+          var outerRadius = outerArc.outerRadius()() * 1.1;
 
+          // send the line to the edge of the graph
+          var sign = (start + end) / 2 < Math.PI ? 1 : -1;
+          pos[0] = outerRadius * sign;
+
+          labelLine.attr('points', [arc.centroid(), outerArc.centroid(), pos]);
+
+          // anchor the text a little further out
           pos[0] *= 1.05;
           var translate = 'translate('+ pos +')';
 
+          // need to set the transform before relaxing
           el.attr('transform', translate);
-          //if (i === data.length - 1) {
-            relax();
-          //}
 
+          // start the relaxing function to prevent overlap
+          relax();
+
+          // return the new transform after relaxing
           return el.attr('transform');
         };
       })
@@ -322,17 +336,13 @@ export default d3.reusable(function(me, data) {
         var interpolate = d3.interpolate(start, x(d.end));
         return function(t) {
           var end = interpolate(t);
+
+          // text anchor can change as it crosses 180 degrees
           return (start + end) / 2 < Math.PI ? 'start' : 'end';
         };
-      })
-      .each('end', function(d, i) {
-        if (i === data.length - 1) {
-          //setTimeout(relax, 0);
-          // console.log('end');
-          relax();
-        }
       });
 
+    // don't animate on subsequent options changes, like browser resizing
     duration = 0;
   };
 });
