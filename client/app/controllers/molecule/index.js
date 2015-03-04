@@ -1,5 +1,23 @@
 import Ember from 'ember';
 
+function getFeature() {
+  return $('.features[name="' + $(this).attr('name') + '"]');
+}
+
+function highlightFeature() {
+  var feature = getFeature.call(this);
+  feature.attr('class', (feature.attr('class') + ' highlight').trim());
+}
+
+function unhighlightFeature() {
+  var feature = getFeature.call(this);
+  feature.attr('class', feature.attr('class').replace('highlight', '').trim());
+}
+
+function getFeatureRow(event) {
+  return $('.feature-row[name="' + $(event.target).attr('name') + '"]');
+}
+
 export default Ember.Controller.extend({
   orderDnafeatures: function() {
     this.model.get('dnafeatures').then(function(dnafeatures) {
@@ -9,23 +27,16 @@ export default Ember.Controller.extend({
 
   dnafeaturesChanged: function() {
     Ember.run.scheduleOnce('afterRender', this, function() {
-      var el;
-      $('.feature-row').hover(function() {
-        el = $('.features[name="' + $(this).attr('name') + '"]');
-        el.attr('class', (el.attr('class') + ' highlight').trim());
-      }, function() {
-        el = $('.features[name="' + $(this).attr('name') + '"]');
-        el.attr('class', el.attr('class').replace('highlight', '').trim());
-      });
+      $('.feature-row').hover(highlightFeature, unhighlightFeature);
     });
   }.observes('dnafeatures'),
 
   actions: {
     hoverIn: function(event) {
-      $('.feature-row[name="' + $(event.target).attr('name') + '"]').addClass('highlight');
+      getFeatureRow(event).addClass('highlight');
     },
     hoverOut: function(event) {
-      $('.feature-row[name="' + $(event.target).attr('name') + '"]').removeClass('highlight');
+      getFeatureRow(event).removeClass('highlight');
     },
     click: function(id) {
       this.transitionToRoute('feature', id);
