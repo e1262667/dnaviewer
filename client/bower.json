@@ -15,6 +15,7 @@
     "underscore": "~1.7.0",
     "d3": "~3.5.5",
     "d3.reusable": "~0.1.1",
-    "clone": "~0.1.0"
+    "clone": "~0.1.0",
+    "ember-animate": "~0.3.7"
   }
 }
