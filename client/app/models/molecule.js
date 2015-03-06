@@ -25,5 +25,6 @@ export default DS.Model.extend({
   sequence: DS.belongsTo({ async: true }),
   user: DS.belongsTo({ async: true }),
 
+  // this is used for easy D3 binding ignoring promises
   raw: DS.attr()
 });

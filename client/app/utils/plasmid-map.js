@@ -131,15 +131,16 @@ export default d3.reusable(function(me, data) {
   var spacing = 12;
 
   function relax() {
-    var isRelaxed = true;
-    labelTexts.each(function(d, i) {
+    var isRelaxed;
+
+    function each(d, i) {
       if (!isRelaxed) {
         return;
       }
 
       var a = this;
-      var da = d3.select(a);
-      var transformA = da.attr('transform');
+      var textA = d3.select(a);
+      var transformA = textA.attr('transform');
 
       // first round this is empty
       if (!transformA) {
@@ -159,14 +160,14 @@ export default d3.reusable(function(me, data) {
           return;
         }
 
-        var db = d3.select(b);
+        var textB = d3.select(b);
 
         // ignore opposite sides of the graph
-        if (da.attr('text-anchor') !== db.attr('text-anchor')) {
+        if (textA.attr('text-anchor') !== textB.attr('text-anchor')) {
           return;
         }
 
-        var transformB = db.attr('transform');
+        var transformB = textB.attr('transform');
 
         // first round this is empty
         if (!transformB) {
@@ -198,7 +199,7 @@ export default d3.reusable(function(me, data) {
 
         // new transform
         transformA = transformA.substring(0, transformA.indexOf(',') + 1) + (y1 + adjust) + ')';
-        da.attr('transform', transformA);
+        textA.attr('transform', transformA);
 
         // move the label lie up as well
         var labelLine = d3.select(labelLines[0][i]);
@@ -206,11 +207,12 @@ export default d3.reusable(function(me, data) {
         points[3] = points[5] = y1;
         labelLine.attr('points', points.join(','));
       });
-    });
+    }
 
-    // recurse
-    if (!isRelaxed) {
-      relax();
+    while (!isRelaxed) {
+      isRelaxed = true;
+
+      labelTexts.each(each);
     }
   }
 
